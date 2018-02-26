@@ -82,32 +82,56 @@ public class Switch extends Device
 		MACAddress srcAddr = etherPacket.getSourceMAC();
 		//map containing all the mac addressed mapped to key that is its name
 		Map<String,Iface> interfaces = getInterfaces();
+        Set<String> temp2 = interfaces.keySet();
+        //itr for all the keys inside the interfaces map
+        Iterator<String> itr_key_name_2 = temp2.iterator();
+        String next_1_2 = null;
+        if(itr_key_name_2.hasNext()) {
+            next_1_2 = itr_key_name_2.next();
+        }
+        System.out.println("CHECK: THE NAMES OF ALL THE INTERFACES PRESENT");
+        while (itr_key_name_2.hasNext()) {
+            sendPacket(etherPacket, interfaces.get(next_1_2));
+            //if ack is true found destination interface.
+            System.out.println(interfaces.get(next_1_2).getName());
+            next_1_2 = itr_key_name_2.next();
+        }
 		////////////////////////////////////////// END //////////////////////////////////////////////////////////
 
 		///////////////////////////////////////// TRIVIAL CHECKING CONDS ///////////////////////////////////////
 		if (destAddr == null) {
 			System.out.println("Error: invalid destination mac address & address is null");
+            System.exit(1);
 		}
 
 		if(srcAddr==null){
 			System.out.println("Error: invalid src mac address & address is null");
+            System.exit(1);
 		}
 		////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/*code for removing entries based on timeouts*/
 		////////////////////////////////////////// TIMEOUTS DELETION ENTRY PART ////////////////////////////////
 		//gets the set of keys of the hash map
 		Set<MACAddress> macKeySet= hmap.keySet();
+		//System.out.println("check: null: macKeySet --> " + macKeySet);
 		//itr for the setkeys to iterate through all the keys
 		Iterator<MACAddress> itrMac_key = macKeySet.iterator();
+        MACAddress next = null;
+        if (itrMac_key.hasNext()) {
+            next = itrMac_key.next();
+        }
+
+        //System.out.println("check: null: itrMac_key --> " + itrMac_key);
 
 		// checks if the next elem is present in the set
 		while (itrMac_key.hasNext()) {
 			// checking condition for time elapsed
-			if((System.currentTimeMillis() - hmap.get(itrMac_key).getCurrTime()) > 15*1000){
+
+			if((System.currentTimeMillis() - hmap.get(next).getCurrTime()) > 15*1000){
 				//removes if the difference of time is more than 15000 ms
-				hmap.remove(itrMac_key);
+				hmap.remove(next);
 			}
-			itrMac_key.next();
+            next = itrMac_key.next();
 		}
 		/*end*/
 		/////////////////////////////////////// END ///////////////////////////////////////////////////////////
@@ -145,25 +169,34 @@ public class Switch extends Device
 			Set<String> temp = interfaces.keySet();
 			//itr for all the keys inside the interfaces map
 			Iterator<String> itr_key_name = temp.iterator();
-			while (itr_key_name.hasNext()) {
-				ack = sendPacket(etherPacket, interfaces.get(itr_key_name));
+            String next_1 = null;
+			if(itr_key_name.hasNext()) {
+                 next_1 = itr_key_name.next();
+            }
+            while (itr_key_name.hasNext()) {
+
+			    ack = sendPacket(etherPacket, interfaces.get(next_1));
 				//if ack is true found destination interface.
 				if (ack) {
-					foundDestInterface = interfaces.get(itr_key_name);
+					foundDestInterface = interfaces.get(next_1);
 				}
-				itr_key_name.next();
+                next_1 = itr_key_name.next();
 			}
 			//found the destination interface update the table
 			//if interface is found through the flood process
 			if (foundDestInterface != null) {
 				//creates an entry into hash map via the wrapper class
 				// with the current time and dest interface
+                System.out.println("and the one that is found!");
+                System.out.println(foundDestInterface.getName());
+
 				Wrapper found_des = new Wrapper(System.currentTimeMillis(), foundDestInterface);
 				hmap.put(destAddr, found_des);
 
 			}else{
 				//if no interface exists
 				System.out.println("Error: no interface took that");
+                System.exit(1);
 			}
 
 		}
@@ -174,3 +207,4 @@ public class Switch extends Device
 		/********************************************************************/
 	}
 }
+
