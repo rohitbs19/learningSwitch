@@ -15,7 +15,7 @@ public class Switch extends Device
 
 	static private Map<MACAddress, Iface> forwardingTable = new HashMap<>();
 	private Map<String, Iface> interfaces;
-	static private Map<MACAddress, Integer> timings = new HashMap();
+	static private Map<MACAddress, Long> timings = new HashMap();
 
 
 	/**
@@ -32,16 +32,16 @@ public class Switch extends Device
 	// else it will return false
 	private boolean checkTime(MACAddress m) {
 
-		if(System.currentTimeMillis() - timings[m] >= 15*1000) {
+		if(System.currentTimeMillis() - timings[m] >= (long)15*1000) {
 			return true;
 		}
 		return false;
 
 	}
 
-	private void setTime(MACAddress m) {
+	private long setTime(MACAddress m) {
 
-		timings.put(m, System.currentTimeMillis());
+		return timings.put(m, System.currentTimeMillis());
 	}
 
 	/**
@@ -93,7 +93,6 @@ public class Switch extends Device
 					// add it to our table.
 					if(sendPacket(etherPacket, interfaces[name]) {
 						forwardingTable.put(etherPacket.getDestinationMACAddress(),interfaces[name]); // update table
-						//setTime(etherPacket.getDestinationMACAddress()); // set timing
 					}
 
 
