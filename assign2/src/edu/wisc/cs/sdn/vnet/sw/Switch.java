@@ -1,10 +1,11 @@
 package edu.wisc.cs.sdn.vnet.sw;
 
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.MACAddress;
 import edu.wisc.cs.sdn.vnet.Device;
 import edu.wisc.cs.sdn.vnet.DumpFile;
 import edu.wisc.cs.sdn.vnet.Iface;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * @author Aaron Gember-Jacobson
@@ -13,9 +14,9 @@ public class Switch extends Device
 {	
 
 
-	static private Map<MACAddress, Iface> forwardingTable = new HashMap<>();
+	static private Map<MACAddress, Iface> forwardingTable = new HashMap<MACAddress, Iface>();
 	private Map<String, Iface> interfaces;
-	static private Map<MACAddress, Long> timings = new HashMap();
+	static private Map<MACAddress, Long> timings = new HashMap<MACAddress, Long>();
 
 
 	/**
@@ -32,7 +33,7 @@ public class Switch extends Device
 	// else it will return false
 	private boolean checkTime(MACAddress m) {
 
-		if(System.currentTimeMillis() - timings[m] >= (long)15*1000) {
+		if(System.currentTimeMillis() - timings.get(m) >= (long)15*1000) {
 			return true;
 		}
 		return false;
@@ -59,18 +60,18 @@ public class Switch extends Device
 		
 		// if the source mac address does not exist, then place that in
 		// the hashmap and update the timing
-		if(!forwardingTable.containsKey(etherPacket.getSourceMACAddres())) {
-			forwardingTable.put(etherPacket.getSourceMACAddres(),inIface); // update table
-			setTime(etherPacket.getSourceMACAddres()); // set the timing
+		if(!forwardingTable.containsKey(etherPacket.getSourceMAC())) {
+			forwardingTable.put(etherPacket.getSourceMAC(),inIface); // update table
+			setTime(etherPacket.getSourceMAC()); // set the timing
 		} else {
 			// if it does exist, then update the timing for this mac address in the timings
-			setTime(etherPacket.getSourceMACAddres());
+			setTime(etherPacket.getSourceMAC());
 
 		}
 
 		// check if the other mac addresses, have been accesses in the 
 		// 15 seconds since the last time that packet arrived
-		for(MACAddress m : timings) {
+		for(MACAddress m : timings.keySet()) {
 			if(checkTime(m)) {
 				forwardingTable.remove(m);
 				timings.remove(m);
@@ -79,7 +80,7 @@ public class Switch extends Device
 
 
 		// check if the ethernet destination host exists within the hashmap 
-		if(forwardingTable[etherPacket.getDestinationMACAddress()] == null) {
+		if(forwardingTable.get(etherPacket.getDestinationMAC()) == null) {
 
 			// if it does not exist in the table, broadcast first 
 				interfaces = getInterfaces();
@@ -91,8 +92,8 @@ public class Switch extends Device
 					// that the destination host has
 					// accepted our packet, which means we can
 					// add it to our table.
-					if(sendPacket(etherPacket, interfaces[name]) {
-						forwardingTable.put(etherPacket.getDestinationMACAddress(),interfaces[name]); // update table
+					if(sendPacket(etherPacket, interfaces.get(name))) {
+						forwardingTable.put(etherPacket.getDestinationMAC(),interfaces.get(name)); // update table
 					}
 
 
@@ -103,7 +104,7 @@ public class Switch extends Device
 			// in this case, we assume that the destination MAC address 
 			// has an interface associated with it. 
 
-			sendPacket(etherPacket, forwardingTable[etherPacket.getDestinationMACAddress()]);
+			sendPacket(etherPacket, forwardingTable.get(etherPacket.getDestinationMAC()));
 
 		}
 		
