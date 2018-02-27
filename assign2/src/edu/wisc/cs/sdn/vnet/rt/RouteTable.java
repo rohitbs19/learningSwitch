@@ -47,7 +47,7 @@ public class RouteTable
 			for(int i = 0 ; i < entries.size() ; i++) {
 				
 				// obtain the network number`	
-				int networkNumber = entries[i].getMaskAddress() & ip;
+				int networkNumber = entries.get(i).getMaskAddress() & ip;
 
 				// cast network number into integer binary				
 				String strNetworkNumber = Integer.toBinaryString(networkNumber);		
@@ -56,7 +56,7 @@ public class RouteTable
 				
 				// compare character by character of each bit
 				int matchLength = 0 ;
-				for(int j = 0 ; j < strNetworkNumber.length ; j++) { 
+				for(int j = 0 ; j < strNetworkNumber.length() ; j++) { 
 					
 					if(strNetworkNumber.charAt(j) != strIP.charAt(j)) { 
 						break;
@@ -77,7 +77,7 @@ public class RouteTable
 			}
 
 			if(flag)  {
-				return entries[max_position];
+				return entries.get(max_position);
 			}
 
 		
