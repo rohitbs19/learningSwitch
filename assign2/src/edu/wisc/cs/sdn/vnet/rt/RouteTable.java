@@ -39,7 +39,48 @@ public class RouteTable
         {
 			/*****************************************************************/
 			/* TODO: Find the route entry with the longest prefix match      */
-			
+		
+			int max_position = 0;
+			int max = 0;
+			boolean flag = false;
+			// iterate through the entries
+			for(int i = 0 ; i < entries.size() ; i++) {
+				
+				// obtain the network number`	
+				int networkNumber = entries[i].getMaskAddress() & ip;
+
+				// cast network number into integer binary				
+				String strNetworkNumber = Integer.toBinaryString(networkNumber);		
+				// cast the IP address into binary string
+				String strIP = Integer.toBinaryString(ip);		
+				
+				// compare character by character of each bit
+				int matchLength = 0 ;
+				for(int j = 0 ; j < strNetworkNumber.length ; j++) { 
+					
+					if(strNetworkNumber.charAt(j) != strIP.charAt(j)) { 
+						break;
+					}
+					matchLength++;	
+
+				}	
+				
+				// if the new matchLength exceeds global max, update
+				// to new max. Also, update position accordingly.
+				if(matchLength > max) { 
+					max = matchLength;
+					max_position = i;
+					flag = true;
+				}
+
+
+			}
+
+			if(flag)  {
+				return entries[max_position];
+			}
+
+		
 			return null;
 			
 			/*****************************************************************/
