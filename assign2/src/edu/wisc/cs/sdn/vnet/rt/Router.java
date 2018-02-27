@@ -170,9 +170,28 @@ public class Router extends Device
 					if(!flag)  {
 							
 						RouteEntry dest; 
-						if((dest = RouteTable.lookup(pkt.getDestinationAddress)) != null) {
+						if((dest = routeTable.lookup(pkt.getDestinationAddress)) != null) {
+							// get the MAC Address of the next hop
+							byte[] next_dest_mac = arpCache.lookup(dest.getGatewayAddress()).toBytes();					
 							
+							byte[] new_source_mac = etherPacket.getDestinationMACAddress();
 								
+							etherPacket.setDestinationMACAddress(new_dest_mac);	
+							etherPacket.setSourceMACAddress(new_source_mac);
+
+							Iface temp = null;
+				   	 		Map<String, Iface> interfaces = getInterfaces();
+							for(String name : interfaces.keySet()) {
+							
+								if(etherPacket.getDestinationMAC().equals(interfaces.get(name).getMACAddress())) {
+									temp=interfaces.get(name);
+									break;
+								}
+							}
+							
+							if(temp != null) { 
+								sendPacket(etherPacket, temp);
+							}
 
 
 
