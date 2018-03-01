@@ -102,33 +102,36 @@ public class Router extends Device
 		// if the packet is IPv4
 		if(etherPacket.getEtherType() == 4) { 
 		
+		{
+
 			// get the IP header and cast it to IPv4
 			IPv4 pkt = (IPv4) etherPacket.getPayload();
-			
-			// store the existing checksum			
+
+			// store the existing checksum
 			short ip_checksum = pkt.getChecksum();
 			short calculated_checksum;
 			// zero out existing checksum
-			pkt.setChecksum(0);
 
+			pkt.setChecksum((short)0);
 
-			
 			// computes new checksum
 			byte[] data = new byte[pkt.getHeaderLength()*4];
 			ByteBuffer bb = ByteBuffer.wrap(data);
 
 			bb.put((byte) (((pkt.getVersion() & 0xf) << 4) | (pkt.getHeaderLength() & 0xf)));
 			bb.put(pkt.getDiffServ());
-			bb.putShort(pkt.getHeaderLength()*4);
+			//accepts short arg and not int compile error
+			short HeadLen = (short) (pkt.getHeaderLength() * 4);
+			bb.putShort(HeadLen);
 			bb.putShort(pkt.getIdentification());
-			bb.putShort((short) (((pkt.getFlags() & 0x7) << 13) | (pkg.getFragmentOffset() & 0x1fff)));
+			bb.putShort((short) (((pkt.getFlags() & 0x7) << 13) | (pkt.getFragmentOffset() & 0x1fff)));
 			bb.put(pkt.getTtl());
 			bb.put(pkt.getProtocol());
 			bb.putShort(pkt.getChecksum());
 			bb.putInt(pkt.getSourceAddress());
 			bb.putInt(pkt.getDestinationAddress());
-			if (pkt.getOption() != null)
-			    bb.put(this.options);
+			if (pkt.getOptions() != null)
+				bb.put(pkt.getOptions());
 
 			// compute checksum if needed
 			bb.rewind();
@@ -137,82 +140,63 @@ public class Router extends Device
 				accumulation += 0xffff & bb.getShort();
 			}
 			accumulation = ((accumulation >> 16) & 0xffff)
-			 + (accumulation & 0xffff);
-			   
+					+ (accumulation & 0xffff);
+
 			calculated_checksum = (short) (~accumulation & 0xffff);
-			
+
 			// if the checksums match, then reset the checksum to
-			// new checksum	
+			// new checksum
 			if(calculated_checksum == ip_checksum) {
-			    
-			     pkt.setChecksum((short) (~accumulation & 0xffff));
-		
-				// decrement the ttl	
-				pkt.setTtl(pkt.getTtl()-1);
-	
+
+				pkt.setChecksum((short) (~accumulation & 0xffff));
+
+				// decrement the ttl
+				//conflict bw int and byte type as pkt.getTtl is of byte type
+				byte temp = (byte)(pkt.getTtl() -1);
+				pkt.setTtl(temp);
+
 				if(pkt.getTtl() > 0){
-					// obtain all the interfaces	
-				   	 Map<String, Iface> interfaces = getInterfaces();
-	
-
-					boolean flag = false
+					// obtain all the interfaces
+					Map<String, Iface> interfaces = getInterfaces();
+					
+					boolean flag = false;
 					// iterate through the key set
-					for(String name : interfaces.keySet()) { 
-						
-						if(pkt.getDestinationAddress() == interfaces.get(name).getIPAddress()) {
-							break;
+					for(String name : interfaces.keySet()) {
+						if(pkt.getDestinationAddress() == interfaces.get(name).getIpAddress()) {
 							flag = true;
-						}	
-
+							break;
+						}
 					}
-
-
 					if(!flag)  {
-							
-						RouteEntry dest; 
-						if((dest = routeTable.lookup(pkt.getDestinationAddress)) != null) {
+
+						RouteEntry dest;
+						if((dest = routeTable.lookup(pkt.getDestinationAddress())) != null) {
 							// get the MAC Address of the next hop
-							byte[] next_dest_mac = arpCache.lookup(dest.getGatewayAddress()).toBytes();					
-							
+							byte[] next_dest_mac = arpCache.lookup(dest.getGatewayAddress()).getMac().toBytes();
+
 							byte[] new_source_mac = etherPacket.getDestinationMACAddress();
-								
-							etherPacket.setDestinationMACAddress(new_dest_mac);	
+
+							etherPacket.setDestinationMACAddress(next_dest_mac);
 							etherPacket.setSourceMACAddress(new_source_mac);
 
-							Iface temp = null;
-				   	 		Map<String, Iface> interfaces = getInterfaces();
-							for(String name : interfaces.keySet()) {
-							
-								if(etherPacket.getDestinationMAC().equals(interfaces.get(name).getMACAddress())) {
-									temp=interfaces.get(name);
+							Iface temp1 = null;
+							Map<String, Iface> interfaces2 = getInterfaces();
+							for(String name : interfaces2.keySet()) {
+
+								if(etherPacket.getDestinationMAC().equals(interfaces2.get(name).getMacAddress())) {
+									temp1=interfaces.get(name);
 									break;
 								}
 							}
-							
-							if(temp != null) { 
-								sendPacket(etherPacket, temp);
+
+							if(temp1 != null) {
+								sendPacket(etherPacket, temp1);
 							}
-
-
-
-	
-						}													
-						
-
-
-
+						}
 					}
-					
-
 				}
-			}	
-			
-			
-	
-		}
-
-		
-		
-		/********************************************************************/
+			}
+		}			
 	}
+}
 }
