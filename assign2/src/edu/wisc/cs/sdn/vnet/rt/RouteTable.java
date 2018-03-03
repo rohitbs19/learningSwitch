@@ -39,35 +39,40 @@ public class RouteTable
         {
 			/*****************************************************************/
 			/* TODO: Find the route entry with the longest prefix match      */
-		
+
 			int max_position = 0;
 			int max = 0;
 			boolean flag = false;
 			// iterate through the entries
 			for(int i = 0 ; i < entries.size() ; i++) {
-				
-				// obtain the network number`	
-				int networkNumber = entries.get(i).getMaskAddress() & ip;
-
-				// cast network number into integer binary				
-				String strNetworkNumber = Integer.toBinaryString(networkNumber);		
+				int networkNumber = 0;
+				// obtain the network number`
+				if (entries.get(i).getGatewayAddress()==0) {
+					 networkNumber = entries.get(i).getMaskAddress() & entries.get(i).getGatewayAddress();
+				}else{
+					networkNumber = entries.get(i).getMaskAddress() & entries.get(i).getDestinationAddress();
+				}
+				// cast network number into integer binary
+				String strNetworkNumber = Integer.toBinaryString(networkNumber);
+				System.out.println("strNetwork number test: ====> " + strNetworkNumber);
 				// cast the IP address into binary string
-				String strIP = Integer.toBinaryString(ip);		
-				
+				String strIP = Integer.toBinaryString(ip);
+				System.out.println("strIP test: ====> " + strIP);
 				// compare character by character of each bit
 				int matchLength = 0 ;
-				for(int j = 0 ; j < strNetworkNumber.length() ; j++) { 
-					
-					if(strNetworkNumber.charAt(j) != strIP.charAt(j)) { 
+
+				for(int j = 0 ; j < strNetworkNumber.length() ; j++) {
+
+					if(strNetworkNumber.charAt(j) != strIP.charAt(j)) {
 						break;
 					}
-					matchLength++;	
+					matchLength++;
 
-				}	
-				
+				}
+
 				// if the new matchLength exceeds global max, update
 				// to new max. Also, update position accordingly.
-				if(matchLength > max) { 
+				if(matchLength > max) {
 					max = matchLength;
 					max_position = i;
 					flag = true;
@@ -80,9 +85,10 @@ public class RouteTable
 				return entries.get(max_position);
 			}
 
-		
+
 			return null;
-			
+
+
 			/*****************************************************************/
         }
 	}
@@ -197,7 +203,7 @@ public class RouteTable
 	
 	/**
 	 * Remove an entry from the route table.
-	 * @param dstIP destination IP of the entry to remove
+	 * @param //dstIP destination IP of the entry to remove
      * @param maskIp subnet mask of the entry to remove
      * @return true if a matching entry was found and removed, otherwise false
 	 */
@@ -215,9 +221,9 @@ public class RouteTable
 	
 	/**
 	 * Update an entry in the route table.
-	 * @param dstIP destination IP of the entry to update
+	 * @param /dstIP destination IP of the entry to update
      * @param maskIp subnet mask of the entry to update
-	 * @param gatewayAddress new gateway IP address for matching entry
+	 * @param /gatewayAddress new gateway IP address for matching entry
 	 * @param iface new router interface for matching entry
      * @return true if a matching entry was found and updated, otherwise false
 	 */
@@ -237,7 +243,7 @@ public class RouteTable
 
     /**
 	 * Find an entry in the route table.
-	 * @param dstIP destination IP of the entry to find
+	 * @param /dstIP destination IP of the entry to find
      * @param maskIp subnet mask of the entry to find
      * @return a matching entry if one was found, otherwise null
 	 */
@@ -269,3 +275,4 @@ public class RouteTable
         }
 	}
 }
+
