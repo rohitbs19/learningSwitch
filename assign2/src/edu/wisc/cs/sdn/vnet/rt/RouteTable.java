@@ -35,8 +35,7 @@ public class RouteTable
 	public RouteEntry lookup(int ip, int source_address)
 	{
 		synchronized(this.entries)
-        {
-			/*****************************************************************/
+        {/*****************************************************************/
 			/* TODO: Find the route entry with the longest prefix match      */
 
 			int max_position = 0;
@@ -53,7 +52,6 @@ public class RouteTable
 				System.out.println(" Arp Lookup ------ ");
 				System.out.println(" Arp lookup for destination Address = " + arpCache.lookup(entry.getDestinationAddress()));
 				System.out.println(" Arp lookup for gateway address = " + arpCache.lookup(entry.getGatewayAddress()));
-
 				System.out.println(" ------------------------ ");
 */
 			}	
@@ -114,12 +112,13 @@ public class RouteTable
 
 
 			return null;
-
-
-			/*****************************************************************/
         }
 	}
-	
+private static int countOnes(int mask) {
+		mask = mask - ((mask >> 1) & 0x55555555);                // put count of each 2 bits into those 2 bits
+		mask = (mask & 0x33333333) + ((mask >> 2) & 0x33333333); // put count of each 4 bits into those 4 bits
+		return ((mask + (mask >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+	}	
 	/**
 	 * Populate the route table from a file.
 	 * @param filename name of the file containing the static route table

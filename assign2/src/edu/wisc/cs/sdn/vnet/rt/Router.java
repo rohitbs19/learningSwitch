@@ -277,24 +277,14 @@ public class Router extends Device
 								System.out.println("Outgoing interface name : " + dest.getInterface().getName());	
 								System.out.println(" Ethernet destination address to be new source  = " + etherPacket.getDestinationMAC().toString());
 								// set destination mac address (ultimate)
-								etherPacket.setDestinationMACAddress(entryII.getMac().toString());
-									
+									etherPacket.setDestinationMACAddress(entryII.getMac().toString());	
 								// set source mac address 
 
-								etherPacket.setSourceMACAddress(dest.getInterface().getMacAddress().toString());
+								etherPacket.setSourceMACAddress(arpCache.lookup(dest.getInterface().getIpAddress()).getMac().toString());
 								System.out.println("next destination address ====> " + entryII.getMac().toString());
 								System.out.println("new source address ====> " + dest.getInterface().getMacAddress().toString());
-								 Iface temp1 = null;
 								//Map<String, Iface> interfaces2 = getInterfaces();
-								
-								for (String name : interfaces.keySet()) {
-
-									if (etherPacket.getDestinationMAC().equals(interfaces.get(name).getMacAddress())) {
-										temp1 = interfaces.get(name);
-										break;
-									}
-								}
-								
+								pkt.resetChecksum();
 								if (dest.getInterface() != null) {
 									System.out.println("enters? *************************");
 									sendPacket(etherPacket,dest.getInterface());

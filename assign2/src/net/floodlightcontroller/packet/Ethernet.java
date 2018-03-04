@@ -78,7 +78,6 @@ public class Ethernet extends BasePacket {
     /**
      * @param destinationMACAddress the destination MAC to set
      */
-    @Override
     public Ethernet setDestinationMACAddress(byte[] destinationMACAddress) {
 
         this.destinationMACAddress = MACAddress.valueOf(destinationMACAddress);
