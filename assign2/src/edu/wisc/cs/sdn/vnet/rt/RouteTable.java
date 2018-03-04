@@ -8,7 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import net.floodlightcontroller.packet.IPv4;
 
 import edu.wisc.cs.sdn.vnet.Iface;
@@ -21,7 +20,7 @@ public class RouteTable
 {
 	/** Entries in the route table */
 	private List<RouteEntry> entries; 
-	
+	private ArpCache arpCache;	
 	/**
 	 * Initialize an empty route table.
 	 */
@@ -33,7 +32,7 @@ public class RouteTable
 	 * @param ip IP address
 	 * @return the matching route entry, null if none exists
 	 */
-	public RouteEntry lookup(int ip)
+	public RouteEntry lookup(int ip, int source_address)
 	{
 		synchronized(this.entries)
         {
@@ -43,33 +42,61 @@ public class RouteTable
 			int max_position = 0;
 			int max = 0;
 			boolean flag = false;
+			
+			// print the ip addresses in all the entries 
+			System.out.println("----------------- IP ADDRESSES IN ENTRIES ------------------");
+			for(RouteEntry entry : entries) { 
+				System.out.println(" Destination Address : " + entry.getDestinationAddress() +  
+						   " Gateway Address : " + entry.getGatewayAddress() +  
+						   " Mask Address : " + entry.getMaskAddress());
+/*
+				System.out.println(" Arp Lookup ------ ");
+				System.out.println(" Arp lookup for destination Address = " + arpCache.lookup(entry.getDestinationAddress()));
+				System.out.println(" Arp lookup for gateway address = " + arpCache.lookup(entry.getGatewayAddress()));
+
+				System.out.println(" ------------------------ ");
+*/
+			}	
+			System.out.println("-------------------------------------------------------------");	
+
+
+			//System.out.println("Source address of the packet = " + source_address);
 			// iterate through the entries
 			for(int i = 0 ; i < entries.size() ; i++) {
-				int networkNumber = 0;
-				// obtain the network number`
-				if (entries.get(i).getGatewayAddress()==0) {
-					 networkNumber = entries.get(i).getMaskAddress() & entries.get(i).getGatewayAddress();
-				}else{
-					networkNumber = entries.get(i).getMaskAddress() & entries.get(i).getDestinationAddress();
-				}
-				// cast network number into integer binary
+			
+				
+				// do anding 				
+				int networkNumber = ip & entries.get(i).getMaskAddress();
+				
+				// int networkNumber = entries.get(i).getDestinationAddress() & entries.get(i).getMaskAddress();
+		
 				String strNetworkNumber = Integer.toBinaryString(networkNumber);
-				System.out.println("strNetwork number test: ====> " + strNetworkNumber);
 				// cast the IP address into binary string
-				String strIP = Integer.toBinaryString(ip);
-				System.out.println("strIP test: ====> " + strIP);
+				String strDestIP = Integer.toBinaryString(entries.get(i).getDestinationAddress());
 				// compare character by character of each bit
 				int matchLength = 0 ;
+				
+				
+
+/*
+				int netNum2 = ip & entries.get(i).getMaskAddress();
+				System.out.println(" netNum2 = " + netNum2);
+*/
 
 				for(int j = 0 ; j < strNetworkNumber.length() ; j++) {
 
-					if(strNetworkNumber.charAt(j) != strIP.charAt(j)) {
+					if(strNetworkNumber.charAt(j) != strDestIP.charAt(j)) {
 						break;
 					}
 					matchLength++;
 
 				}
 
+
+			/*	if(netNum2 == entries.get(i).getDestinationAddress()) { 
+					return entries.get(i);
+				} 
+			*/
 				// if the new matchLength exceeds global max, update
 				// to new max. Also, update position accordingly.
 				if(matchLength > max) {
