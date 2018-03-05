@@ -96,7 +96,7 @@ public class Switch extends Device
 		for (MACAddress name : hmap.keySet()) {
 			System.out.println(hmap.get(name).GetIface().getName());
 		}
-  		for (String name : interfaces.keySet()) {
+  		for (MACAddress name : hmap.keySet()) {
 			if (hmap.get(name)!=null && System.currentTimeMillis() - hmap.get(name).getCurrTime()> (15000)) {
 				hmap.remove(name);
 			}

@@ -118,10 +118,11 @@ public class Router extends Device
 			of each interface, if equal ?  drop.
 
 		*/
-		/*
+		
 		System.out.println("Ethernet packet type = " + etherPacket.getEtherType());
+	
 		System.out.println("Ethernet type for TYPE_IPv4 = " + Ethernet.TYPE_IPv4);
-		System.out.println("Ethernet type for TYPE_ARP" + Ethernet.TYPE_ARP);
+	/*	System.out.println("Ethernet type for TYPE_ARP" + Ethernet.TYPE_ARP);
 
 		System.out.println("Ethernet type for TYPE_RARP" + Ethernet.TYPE_RARP);
 
@@ -247,15 +248,15 @@ public class Router extends Device
 							System.out.println(pkt.toString());						
 				
 
-							byte[] next_dest_mac = null				;
+							String next_dest_mac = null				;
 							// if the gateway address of the destination is not zero, then
 							// send it to the gateway
 							System.out.println(arpCache.toString());
 							ArpEntry entryII = null;
 							if (dest.getGatewayAddress() != 0) {
-								ArpEntry entryI = arpCache.lookup(dest.getGatewayAddress());
-								if (entryI != null) {
-									next_dest_mac = entryI.getMac().toBytes();
+								entryII = arpCache.lookup(dest.getGatewayAddress());
+								if (entryII != null) {
+									next_dest_mac = entryII.getMac().toString();
 								}
 							} else {
 								// if the gateway is zero, that means we have reached the destination								       // node, so we can send it directly to the host that is attached to 
@@ -263,7 +264,7 @@ public class Router extends Device
 								entryII = arpCache.lookup(pkt.getDestinationAddress());
 								System.out.println(" entryII value = " + entryII);
 								if (entryII != null) {
-									next_dest_mac = entryII.getMac().toBytes();
+									next_dest_mac = entryII.getMac().toString();
 								}
 							}
 							
@@ -273,14 +274,22 @@ public class Router extends Device
 								
 
 								
-								byte[] new_source_mac = dest.getInterface().getMacAddress().toBytes(); 
+								int new_source_ip = dest.getInterface().getIpAddress(); 
 								System.out.println("Outgoing interface name : " + dest.getInterface().getName());	
 								System.out.println(" Ethernet destination address to be new source  = " + etherPacket.getDestinationMAC().toString());
 								// set destination mac address (ultimate)
-									etherPacket.setDestinationMACAddress(entryII.getMac().toString());	
+									etherPacket.setDestinationMACAddress(next_dest_mac);	
+									if(inIface==dest.getInterface()){
+										System.out.println("same interface!");
+										return;
+									}
 								// set source mac address 
-
-								etherPacket.setSourceMACAddress(arpCache.lookup(dest.getInterface().getIpAddress()).getMac().toString());
+								String set_src = arpCache.lookup(new_source_ip).getMac().toString();
+								if(set_src==null){
+									System.out.println("arp cache failed for src");
+									return;
+								}
+								etherPacket.setSourceMACAddress(set_src);
 								System.out.println("next destination address ====> " + entryII.getMac().toString());
 								System.out.println("new source address ====> " + dest.getInterface().getMacAddress().toString());
 								//Map<String, Iface> interfaces2 = getInterfaces();
