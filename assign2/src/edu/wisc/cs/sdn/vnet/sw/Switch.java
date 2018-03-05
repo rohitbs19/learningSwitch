@@ -1,6 +1,7 @@
 package edu.wisc.cs.sdn.vnet.sw;
 import java.lang.reflect.Array;
-import java.util.HashMap;
+import java.util.AbstractMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import net.floodlightcontroller.packet.Ethernet;
 import edu.wisc.cs.sdn.vnet.Device;
@@ -50,10 +51,11 @@ public class Switch extends Device
 	 * @param inIface the interface on which the packet was received
 	 */
 
-	public static HashMap<MACAddress, Wrapper> hmap = new HashMap<MACAddress, Wrapper>();
+	public static ConcurrentHashMap<MACAddress, Wrapper> hmap = new ConcurrentHashMap<MACAddress, Wrapper>();
 
 	public void handlePacket(Ethernet etherPacket, Iface inIface)
 	{
+		 synchronized(this.hmap){
 		System.out.println("*** -> Received packet: " +
 				etherPacket.toString().replace("\n", "\n\t"));
 
@@ -93,24 +95,25 @@ public class Switch extends Device
 		}
 		/*code for removing entries based on timeouts*/
 		//print the hashmap
-		for (MACAddress name : hmap.keySet()) {
-			System.out.println(hmap.get(name).GetIface().getName());
-		}
-  		for (MACAddress name : hmap.keySet()) {
-			if (hmap.get(name)!=null && System.currentTimeMillis() - hmap.get(name).getCurrTime()> (15000)) {
-				hmap.remove(name);
-			}
-		}
 		
-		//checks if the destination mac address is inside the has map
-		// temp to hold the looked up dest addr
-		//temp for holding looked up src in hash map
-		if (hmap.get(srcAddr) == null) {
-			Wrapper new_src = new Wrapper(System.currentTimeMillis(), inIface);
-			hmap.put(srcAddr, new_src);
-		}else{
-			hmap.get(srcAddr).setCurrTime(System.currentTimeMillis());
-		}
+			for (MACAddress name : hmap.keySet()) {
+				System.out.println(hmap.get(name).GetIface().getName());
+			}
+			for (MACAddress name : hmap.keySet()) {
+				if (hmap.get(name)!=null && System.currentTimeMillis() - hmap.get(name).getCurrTime()> (15000)) {
+					hmap.remove(name);
+				}
+			}
+			
+			//checks if the destination mac address is inside the has map
+			// temp to hold the looked up dest addr
+			//temp for holding looked up src in hash map
+			if (hmap.get(srcAddr) == null) {
+				Wrapper new_src = new Wrapper(System.currentTimeMillis(), inIface);
+				hmap.put(srcAddr, new_src);
+			}else{
+				hmap.get(srcAddr).setCurrTime(System.currentTimeMillis());
+			}
 	        System.out.println("////////////////////////////////////////////////////////////////////////////");	
 		for (MACAddress name : hmap.keySet()) {
 			System.out.println(hmap.get(name).GetIface().getName());
@@ -141,5 +144,6 @@ public class Switch extends Device
 
 		/********************************************************************/
 	}
+}
 }
 
